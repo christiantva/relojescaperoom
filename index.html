@@ -57,7 +57,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#2B1A10;font-family:va
 .etq{position:absolute;left:0;top:0;transform:translate(-50%,-120%);padding:6px 14px;border-radius:16px;font-weight:900;
   font-size:24px;color:var(--crema);border:3px solid var(--crema);box-shadow:0 4px 0 var(--sombra);display:flex;gap:6px;align-items:center}
 .etq svg{width:30px;height:30px}
-#etqHora{background:var(--coral)} #etqMin{background:var(--turquesa)}
+#etqHora{background:var(--coral);transform:translate(-50%,35%)} #etqMin{background:var(--turquesa);transform:translate(-50%,-135%)}
 #nombrar{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%) scale(1);display:flex;flex-direction:column;
   align-items:center;gap:6px;padding:18px 40px;font-size:clamp(44px,8vw,104px);font-weight:900;color:var(--tinta);
   text-align:center;white-space:nowrap}
@@ -241,7 +241,7 @@ const CONTENIDO = {
   hola: T('¡Hola! Soy Cucú.', '¡Hola! Soy Cucú.'),
   relojParado: T('El gran reloj se detuvo.', null, 'cucu', 'reloj:12:0'),
   congelado: T('Todo quedó congelado a las 12.', 'Todo quedó congelado a las doce.', 'cucu', 'reloj:12:0'),
-  ayudante: n => T(n + ', eres mi ayudante.', n + ', eres mi ayudante.', 'cucu', 'mano'),
+  ayudante: n => (n === 'Ayudante' ? T('Eres mi nuevo ayudante.', null, 'cucu', 'mano') : T(n + ', eres mi ayudante.', null, 'cucu', 'mano')),
   buscar: T('Busquemos 5 engranajes dorados.', 'Busquemos cinco engranajes dorados.', 'cucu', 'engranaje'),
   caminar: T('Camina con W A S D.', 'Camina con las teclas W, A, S y D.', 'cucu', 'teclas'),
   mirar: T('Mira con las flechas.', null, 'cucu', 'flechas'),
@@ -323,6 +323,7 @@ const CONTENIDO = {
   diaDespues: d => T('¿Qué día va después del ' + DIAS[d] + '?', null, 'cucu', 'semana'),
   diaErr: d => T('Después del ' + DIAS[d] + ', ¿cuál sigue?', null, 'cucu', 'semana'),
   diaBien: d => T('Después del ' + DIAS[d] + ', ' + DIAS[(d + 1) % 7] + '.', null, 'cucu', 'semana'),
+  dong: T('¡Dong! ¡Dong! ¡Dong!', '¡Dong, dong, dong!', 'campanaMayor', 'campanaMayor'),
   relojAnda: T('¡El reloj vuelve a andar!', null, 'cucu', 'reloj'),
   puebloDesperto: T('¡El pueblo despertó!', null, 'cucu', 'sol'),
   gracias: n => T('¡Gracias, ' + n + '!', null, 'cucu', 'estrella'),
@@ -1337,7 +1338,7 @@ const PART = {
       return g;
     };
     const matPolvo = new THREE.PointsMaterial({ size: 0.09, map: TEX.brillo, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true });
-    const matChispa = new THREE.PointsMaterial({ size: 0.075, map: TEX.chispa, vertexColors: true, transparent: true, depthWrite: false, alphaTest: 0.08, sizeAttenuation: true });
+    const matChispa = new THREE.PointsMaterial({ size: 0.1, map: TEX.chispa, vertexColors: true, transparent: true, depthWrite: false, alphaTest: 0.08, sizeAttenuation: true });
     this.puntos = new THREE.Points(geo(0, np), matPolvo);
     this.chispas = new THREE.Points(geo(np, n), matChispa);
     this.puntos.frustumCulled = false; this.chispas.frustumCulled = false;
@@ -1440,6 +1441,13 @@ function texDia(d) {
 }
 function texEtiqueta(txt, fondo, letra, borde) {
   return texTarjeta('et' + txt + fondo, 256, 112, (g, w, h) => { fondoTarjeta(g, w, h, fondo, borde || C.nogal); textoAjustado(g, txt, w / 2, h / 2 + 3, w - 30, 64, letra); });
+}
+function texPlaca(icono, texto, fondo) {
+  return texTarjeta('placa' + texto, 256, 96, (g, w, h) => {
+    fondoTarjeta(g, w, h, C.crema, fondo);
+    pintarIcono(g, icono, 12, 12, 72);
+    textoAjustado(g, texto, 160, h / 2 + 3, 150, 42, fondo);
+  });
 }
 function texMes(m) { return texTarjeta('mes' + m, 256, 150, (g, w, h) => { fondoTarjeta(g, w, h, C.crema, C.turq); textoAjustado(g, MESES[m], w / 2, h / 2 + 4, w - 30, 56, C.osc); }); }
 function texIconoDisco(id, borde) {
@@ -1578,7 +1586,7 @@ function crearRanura(spec) {
   anillo.visible = spec.visible !== false;
   R.scene.add(anillo); EST.objetos.push(anillo);
   const r = {
-    id: spec.id, keys: spec.keys.slice(), wx: _mun.x, wz: _mun.z, lx: spec.lx, lz: spec.lz, radio: spec.radio,
+    id: spec.id, keys: spec.keys.slice(), wx: _mun.x, wz: _mun.z, lx: spec.lx, lz: spec.lz, radius: spec.radio,
     capacidad: spec.capacidad || 1, llenos: [], anillo: anillo, matBase: base, rotY: mesa.rot + (spec.rotY || 0) * DEG,
     activa: true, flash: 0, mostrar: spec.visible !== false, alturaPieza: spec.alturaPieza
   };
@@ -1666,7 +1674,7 @@ function findCandidate(pieza, x, z, ranuras, extra) {
     const r = ranuras[i];
     if (!r.activa || r.llenos.length >= r.capacidad || !r.accepts(pieza)) continue;
     const d = Math.hypot(x - r.wx, z - r.wz);
-    if (d < r.radio + CONFIG.ARRASTRE.extraEncaje + (extra || 0) && d < md) { md = d; mejor = r; }
+    if (d < r.radius + CONFIG.ARRASTRE.extraEncaje + (extra || 0) && d < md) { md = d; mejor = r; }
   }
   return mejor ? { ranura: mejor, dist: md } : null;
 }
@@ -1677,7 +1685,7 @@ function ranuraCercana(x, z, ranuras, extra) {
     const r = ranuras[i];
     if (!r.activa || r.llenos.length >= r.capacidad) continue;
     const d = Math.hypot(x - r.wx, z - r.wz);
-    if (d < r.radio + CONFIG.ARRASTRE.extraEncaje + (extra || 0) && d < md) { md = d; mejor = r; }
+    if (d < r.radius + CONFIG.ARRASTRE.extraEncaje + (extra || 0) && d < md) { md = d; mejor = r; }
   }
   return mejor ? { ranura: mejor, dist: md } : null;
 }
@@ -1754,7 +1762,7 @@ function limpiarEstacion() {
   apagarBrilloManos();
   soltarTodo();
   PISTAS.desarmar();
-  UI.listo(null); UI.etiquetas(null, false); UI.nombrar(null);
+  UI.listo(null); UI.etiquetas(null, false); UI.nombrar(null); UI.teclas(false);
 }
 // Opciones de lectura (correcta + errores típicos): leer la larga como hora, o el número siguiente
 function opcionesLeer(h, media) {
@@ -1975,6 +1983,7 @@ const DRAG = { estado: 'IDLE', pieza: null, mano: null, sel: null, cand: null, m
   hit: new THREE.Vector3(), ok: false, rx: 0, rz: 0, px: 0, pz: 0, presion: null, hover: null };
 const PLANO = new THREE.Plane(new THREE.Vector3(0, 1, 0), -(CONFIG.MESA.alto + CONFIG.ARRASTRE.alturaPlano));
 const _pk = { x: 0, z: 0 };
+const ALTURA_TOQUE = 0.07;   // toca y toca con manecillas: entre la esfera y las perillas
 function puedeInteractuar() { return CAM.modo === 'mesa' && EST.interactivo && !G.ayudando && G.estado !== 'PAUSA'; }
 // El rayo corta SOLO el plano horizontal invisible (mesa + 0.12 m)
 function rayoPlano(ev) {
@@ -2020,9 +2029,9 @@ function alBajar(ev) {
   const o = buscarObjetivo();
   if (DRAG.sel && DRAG.sel.tipo === 'mano') {      // con una manecilla elegida, tocar la esfera la envía allí
     const rl = DRAG.sel.obj.reloj;
-    puntoAltura(0.05, _pk); mesaALocal(rl.mesa, _pk.x, _pk.z, _loc);
+    puntoAltura(ALTURA_TOQUE, _pk); mesaALocal(rl.mesa, _pk.x, _pk.z, _loc);
     const dc = Math.hypot(_loc.x - rl.lx, _loc.z - rl.lz);
-    if (dc < rl.r * 1.3 && (!o || (o.obj === DRAG.sel.obj ? o.d > 0.04 : o.d > 0.06))) { enviarSeleccion(); return; }
+    if (dc < rl.r * 1.3 && (!o || (o.obj === DRAG.sel.obj ? o.d > 0.04 : o.d > 0.045))) { enviarSeleccion(); return; }
   }
   if (o) {
     try { R.renderer.domElement.setPointerCapture(ev.pointerId); } catch (e) { }
@@ -2055,6 +2064,13 @@ function alMover(ev) {
     const o = buscarObjetivo();
     DRAG.estado = o ? 'HOVER' : 'IDLE'; DRAG.hover = o;
     cv.style.cursor = o ? 'grab' : (DRAG.sel ? 'pointer' : 'default');
+    if (DRAG.sel && DRAG.sel.tipo === 'mano') {        // vista previa: se ilumina la marca donde caerá
+      const m = DRAG.sel.obj, rl = m.reloj;
+      puntoAltura(ALTURA_TOQUE, _pk); mesaALocal(rl.mesa, _pk.x, _pk.z, _loc);
+      const dc = Math.hypot(_loc.x - rl.lx, _loc.z - rl.lz);
+      if (dc < rl.r * 1.3 && dc > 0.03) mostrarLuzMarca(m, nearestMark(m.tipo, anguloEnReloj(rl, _pk.x, _pk.z), rl.modo).angulo);
+      else mostrarLuzMarca(m, m.obj);
+    }
   }
 }
 function alSubir(ev) { if (DRAG.estado === 'DRAGGING' && ev.pointerId === DRAG.pid) terminarPresion(true); }
@@ -2193,7 +2209,7 @@ function enviarSeleccion() {
     return;
   }
   const m = s.obj, rl = m.reloj;
-  puntoAltura(0.05, _pk);
+  puntoAltura(ALTURA_TOQUE, _pk);
   mesaALocal(rl.mesa, _pk.x, _pk.z, _loc);
   const d = Math.hypot(_loc.x - rl.lx, _loc.z - rl.lz);
   deseleccionar();
@@ -2312,8 +2328,8 @@ const CUCU = {
         const dx = m.x - JUG.x, dz = m.z - JUG.z, d = Math.hypot(dx, dz);
         if (d < 3.4) { const pc = this.perchaLocal(est); mesaAMundo(m, pc.x, pc.z, _mun); this.obj.set(_mun.x, m.y + (pc.y || 0.16), _mun.z); }
         else {   // vuela delante del niño, en dirección a la mesa (y vuelve si se aleja)
-          const k = Math.min(1.6, d - 1.5) / d;
-          this.obj.set(JUG.x + dx * k, 1.75 + Math.sin(t * 1.7) * 0.12, JUG.z + dz * k);
+          const k = Math.min(1.9, d - 1.5) / d, ux = dx / d, uz = dz / d;
+          this.obj.set(JUG.x + dx * k - uz * 0.55, 1.95 + Math.sin(t * 1.7) * 0.1, JUG.z + dz * k + ux * 0.55);
         }
       }
     }
@@ -2797,7 +2813,9 @@ async function est1(A) {
   for (let i = 0; i < ejes.length; i++) ejes[i].activa = false;
   const icoH = crearPlano(lb.ranuras[0].lx, lb.ranuras[0].lz, 0.13, 0.13, texIconoDisco('campana', C.coral), 0.004);
   const icoM = crearPlano(lb.ranuras[1].lx, lb.ranuras[1].lz, 0.13, 0.13, texIconoDisco('arena', C.turq), 0.004);
-  icoH.visible = icoM.visible = false;
+  const placaH = crearPlano(lb.ranuras[0].lx, 0.0, 0.34, 0.13, texPlaca('campana', 'HORA', C.coral), 0.004);
+  const placaM = crearPlano(lb.ranuras[1].lx, 0.0, 0.34, 0.13, texPlaca('arena', 'MINUTOS', C.turq), 0.004);
+  icoH.visible = icoM.visible = placaH.visible = placaM.visible = false;
   await esperarLlegada(A, OBJ.numeros);
   // VER
   UI.objetivo(OBJ.numeros);
@@ -2828,7 +2846,7 @@ async function est1(A) {
   UI.objetivo(OBJ.manos);
   for (let i = 0; i < manos.length; i++) { manos[i].activa = true; manos[i].obj.visible = true; }
   for (let i = 0; i < ejes.length; i++) { ejes[i].activa = true; ejes[i].mostrar = true; }
-  icoH.visible = icoM.visible = true;
+  icoH.visible = icoM.visible = placaH.visible = placaM.visible = true;
   await A.decir(L.manosIntro);
   const pc = A.decir(L.cortaDice); await brillarPieza(A, manos[0], 1.6); await pc;
   const pl = A.decir(L.largaDice); await brillarPieza(A, manos[1], 1.6); await pl;
@@ -2853,7 +2871,7 @@ async function est1(A) {
     }
   });
   for (let i = 0; i < manos.length; i++) manos[i].obj.visible = false;
-  icoH.visible = icoM.visible = false;
+  icoH.visible = icoM.visible = placaH.visible = placaM.visible = false;
   ponerHora(reloj, 12, false, true);
   reloj.manos.hora.grupo.visible = true; reloj.manos.min.grupo.visible = true;
   AUD.toc();
@@ -3085,7 +3103,8 @@ const G = {
   stats: { partes: { ok: 0, total: 0 }, punto: { ok: 0, total: 0 }, media: { ok: 0, total: 0 }, rutinas: { ok: 0, total: 0 }, calendario: { ok: 0, total: 0 } },
   pistas: 0, errores: 0, engranajes: 0, estacionActiva: -1, estacionLista: false, controles: false, ayudando: false,
   tInicio: 0, tFin: 0, audioFondo: false, musica: true, ctxEst: null, ctxIntro: null, camino: false, miro: false, manosMovidas: 0,
-  fps: 60, menuAng: 0, lineaResultado: '', terminado: false, escalaTiempo: 1
+  fps: 60, menuAng: 0, lineaResultado: '', terminado: false,
+  escalaTiempo: 1   // 1 = normal (solo las pruebas automáticas lo cambian)
 };
 function alternarPausa() {
   if (G.estado === 'MENU' || G.estado === 'RESULTADO') return;
@@ -3104,6 +3123,7 @@ function saltarEstacion() {
 async function correrEstacion(i) {
   const ctx = nuevoCtx(), A = ayudante(ctx);
   G.ctxEst = ctx;
+  if (i > 0) UI.teclas(false);
   G.estado = i === 0 ? 'TUTORIAL' : 'EST' + i;
   EST.idx = i; EST.mesa = MESAS[i];
   G.estacionActiva = i; G.estacionLista = false;
@@ -3180,6 +3200,8 @@ async function finalTorre() {
   transicion(_camPrueba.position, _camPrueba.quaternion, 1.8, 'fijo');
   CUCU.modo = 'libre'; CUCU.irA(0.9, 2.2, -4.8);
   await A.hasta(() => CAM.modo === 'fijo');
+  UI.teclas(false);
+  UI.subtitulo(L.dong);
   for (let k = 0; k < 3; k++) {          // campanadas graves
     AUD.campanada(true);
     balancearCampana(0.22);
@@ -3315,7 +3337,16 @@ const UI = {
   modoMesa(v) { this.modo = v; },
   pausa(v) { this.el.pausa.classList.toggle('oculto', !v); },
   botonMute() { const s = svgIcono(AUD.mute ? 'altavoz:0' : 'altavoz'); this.el.btnMute.innerHTML = s; this.el.btnMuteP.innerHTML = s + (AUD.mute ? 'Sin sonido' : 'Sonido'); },
-  listo(reloj) { this.listoReloj = reloj; this.el.btnListo.classList.toggle('oculto', !reloj); this.lx = -1; },
+  listo(reloj) { this.listoReloj = reloj; this.el.btnListo.classList.toggle('oculto', !reloj); this.lx = -1; if (reloj) this.posListo(); },
+  // El botón Listo va junto al reloj (se proyecta un punto de la mesa a la pantalla)
+  posListo() {
+    const e = this.el, rl = this.listoReloj;
+    e.btnListo.style.visibility = CAM.modo === 'mesa' && EST.interactivo ? 'visible' : 'hidden';
+    mesaAMundo(rl.mesa, rl.lx + rl.r + 0.62, rl.lz + 0.36, _mun);
+    _v1.set(_mun.x, rl.mesa.y + 0.05, _mun.z).project(R.camera);
+    const x = Math.round((_v1.x * 0.5 + 0.5) * window.innerWidth), y = Math.round((-_v1.y * 0.5 + 0.5) * window.innerHeight);
+    if (x !== this.lx || y !== this.ly) { this.lx = x; this.ly = y; e.btnListo.style.left = x + 'px'; e.btnListo.style.top = y + 'px'; }
+  },
   pulsoListo() { const b = this.el.btnListo; b.classList.add('pulso'); setTimeout(() => b.classList.remove('pulso'), 3000); },
   etiquetas(reloj, modo) { this.etqReloj = modo ? reloj : null; this.etqModo = modo; if (!modo) { this.el.etqHora.classList.add('oculto'); this.el.etqMin.classList.add('oculto'); } },
   nombrar(texto, icono, dur) {
@@ -3374,15 +3405,7 @@ const UI = {
     const vIr = enJuego && CAM.modo === 'libre' && G.controles && G.estacionActiva >= 0 && G.estacionLista;
     if (e.btnVolver.classList.contains('oculto') === vMesa) e.btnVolver.classList.toggle('oculto', !vMesa);
     if (e.btnMesa.classList.contains('oculto') === vIr) e.btnMesa.classList.toggle('oculto', !vIr);
-    if (this.listoReloj) {
-      const rl = this.listoReloj;
-      const visible = CAM.modo === 'mesa' && EST.interactivo;
-      e.btnListo.style.visibility = visible ? 'visible' : 'hidden';
-      mesaAMundo(rl.mesa, rl.lx + rl.r + 0.62, rl.lz + 0.36, _mun);
-      _v1.set(_mun.x, rl.mesa.y + 0.05, _mun.z).project(R.camera);
-      const x = Math.round((_v1.x * 0.5 + 0.5) * window.innerWidth), y = Math.round((-_v1.y * 0.5 + 0.5) * window.innerHeight);
-      if (x !== this.lx || y !== this.ly) { this.lx = x; this.ly = y; e.btnListo.style.left = x + 'px'; e.btnListo.style.top = y + 'px'; }
-    }
+    if (this.listoReloj) this.posListo();
     if (this.etqReloj) {
       const rl = this.etqReloj, tipos = TIPOS_MANO, els = this.etqEls || (this.etqEls = [e.etqHora, e.etqMin]);
       for (let i = 0; i < 2; i++) {
@@ -3542,7 +3565,7 @@ function disenosDePrueba() {
 }
 function probarDiseno(dz, ok) {
   const mesa = dz.mesa, l = dz.l, nom = dz.nombre;
-  const ran = l.ranuras.map(r => { mesaAMundo(mesa, r.lx, r.lz, _mun); return { id: r.id, keys: r.keys, wx: _mun.x, wz: _mun.z, radio: r.radio, activa: true, llenos: [], capacidad: 1, accepts: aceptaPieza }; });
+  const ran = l.ranuras.map(r => { mesaAMundo(mesa, r.lx, r.lz, _mun); return { id: r.id, keys: r.keys, wx: _mun.x, wz: _mun.z, radius: r.radio, activa: true, llenos: [], capacidad: 1, accepts: aceptaPieza }; });
   let todoBien = true;
   const fallo = t => { todoBien = false; ok(nom + ': ' + t, false); };
   for (let i = 0; i < ran.length; i++) {
@@ -3565,7 +3588,7 @@ function probarDiseno(dz, ok) {
         const r = acepta[k];
         const c = findCandidate(pz, r.wx, r.wz, ran, 0);
         if (!c || c.ranura !== r) fallo(s.id + ' no encaja en ' + r.id);
-        const c2 = findCandidate(pz, r.wx + r.radio * 0.9, r.wz, ran, 0);
+        const c2 = findCandidate(pz, r.wx + r.radius * 0.9, r.wz, ran, 0);
         if (!c2 || c2.ranura.keys.indexOf(s.key) < 0) fallo(s.id + ' no encaja cerca de ' + r.id);
       }
     }
@@ -3573,7 +3596,7 @@ function probarDiseno(dz, ok) {
     // Un lugar lejano (esquina opuesta del tablero) nunca encaja
     mesaAMundo(mesa, s.lx > 0 ? -1.25 : 1.25, 0.65, _mun);
     const lejos = findCandidate(pz, _mun.x, _mun.z, ran, 0);
-    if (lejos && Math.hypot(lejos.ranura.wx - _mun.x, lejos.ranura.wz - _mun.z) > lejos.ranura.radio + CONFIG.ARRASTRE.extraEncaje) fallo(s.id + ' encaja en un lugar lejano');
+    if (lejos && Math.hypot(lejos.ranura.wx - _mun.x, lejos.ranura.wz - _mun.z) > lejos.ranura.radius + CONFIG.ARRASTRE.extraEncaje) fallo(s.id + ' encaja en un lugar lejano');
     // Toca y toca: la pieza se puede elegir (ninguna otra le tapa el centro)
     for (let k = 0; k < l.piezas.length; k++) {
       if (k === i) continue;
@@ -3681,7 +3704,7 @@ function iniciar() {
   PART.crear();
   instalarEntradas();
   alRedimensionar();
-  window.__juego = { G: G, EST: EST, DRAG: DRAG, CAM: CAM, CUCU: CUCU, MESAS: MESAS, R: R, UI: UI, DEBUG: DEBUG, PISTAS: PISTAS,
+  window.__juego = { G: G, EST: EST, DRAG: DRAG, CAM: CAM, CUCU: CUCU, MESAS: MESAS, JUG: JUG, R: R, UI: UI, DEBUG: DEBUG, PISTAS: PISTAS,
     nearestMark: nearestMark, findCandidate: findCandidate, mesaAMundo: mesaAMundo, posPerilla: posPerilla, RELOJ: RELOJ, AUD: AUD };
   requestAnimationFrame(bucle);
 }

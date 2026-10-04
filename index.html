@@ -44,7 +44,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#2B1A10;font-family:va
 #minimapa .eng.pop svg{animation:pop .7s ease-out}
 #botonesTop{position:absolute;right:14px;top:96px;display:flex;gap:10px}
 #subtitulo{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);display:flex;align-items:center;gap:14px;
-  padding:10px 26px 10px 12px;max-width:min(76vw,900px);min-height:76px;font-size:clamp(22px,3.1vw,36px);font-weight:900;
+  padding:10px 26px 10px 12px;max-width:min(900px,calc(100vw - 400px));min-width:min(420px,90vw);min-height:76px;font-size:clamp(22px,3.1vw,36px);font-weight:900;
   line-height:1.15;transition:opacity .25s}
 #subtitulo .ico svg{width:62px;height:62px;display:block}
 #subtitulo .pic svg{width:54px;height:54px;display:block}
@@ -53,6 +53,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#2B1A10;font-family:va
 #btnMesa{position:absolute;right:16px;bottom:16px;font-size:26px;min-height:68px}
 #btnSaltar{position:absolute;right:16px;bottom:16px}
 #btnListo{position:absolute;left:0;top:0;font-size:30px;min-height:76px;min-width:150px;transform:translate(-50%,-50%)}
+#btnListo:active{transform:translate(-50%,calc(-50% + 4px))}
 #btnListo.pulso{animation:latido 1.2s ease-in-out infinite}
 .etq{position:absolute;left:0;top:0;transform:translate(-50%,-120%);padding:6px 14px;border-radius:16px;font-weight:900;
   font-size:24px;color:var(--crema);border:3px solid var(--crema);box-shadow:0 4px 0 var(--sombra);display:flex;gap:6px;align-items:center}
@@ -68,7 +69,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#2B1A10;font-family:va
 #teclas svg{width:120px;height:64px}
 #vuela{position:fixed;width:60px;height:60px;z-index:7;pointer-events:none;transition:left .9s cubic-bezier(.5,0,.3,1),top .9s cubic-bezier(.5,0,.3,1),transform .9s}
 #vuela svg{width:100%;height:100%;filter:drop-shadow(0 0 10px #FFD56B)}
-#progresoFinal{position:absolute;left:50%;top:12px;transform:translateX(-50%);display:flex;gap:6px;padding:6px 14px}
+#progresoFinal{position:absolute;left:14px;top:110px;display:flex;gap:6px;padding:6px 14px}
 #progresoFinal svg{width:40px;height:40px}
 /* ---------- Pantallas ---------- */
 .pantalla{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;
@@ -95,7 +96,7 @@ h2{margin:6px 0;font-size:clamp(24px,3.6vw,38px);color:var(--nogal)}
 #lineaRes{font-family:var(--fuente);font-size:15px;background:#FFF8EA;border:2px dashed var(--cobre);border-radius:10px;padding:8px;
   margin:8px auto;max-width:640px;-webkit-user-select:text;user-select:text;word-break:break-word}
 /* ---------- Depuración ---------- */
-#debug{position:fixed;left:10px;top:110px;z-index:20;background:rgba(255,241,220,.93);border:3px solid var(--cobre);border-radius:12px;
+#debug{position:fixed;left:10px;top:170px;z-index:20;background:rgba(255,241,220,.93);border:3px solid var(--cobre);border-radius:12px;
   padding:8px 12px;font:14px/1.35 ui-monospace,Menlo,Consolas,monospace;color:var(--oscuro);white-space:pre;pointer-events:none}
 #autotest{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:30;width:min(720px,94vw);max-height:84vh;overflow:auto;
   padding:16px 20px;font:15px/1.4 ui-monospace,Menlo,Consolas,monospace;pointer-events:auto}
@@ -103,7 +104,7 @@ h2{margin:6px 0;font-size:clamp(24px,3.6vw,38px);color:var(--nogal)}
 #autotest .ok{color:#3F7F35} #autotest .mal{color:var(--coral)}
 #aviso{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:#3B2416;color:var(--crema);
   font-size:26px;text-align:center;padding:30px}
-#toast{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);z-index:25;padding:14px 26px;font-size:26px;font-weight:900}
+#toast{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);z-index:25;pointer-events:none;padding:14px 26px;font-size:26px;font-weight:900}
 @keyframes pop{0%{transform:scale(.4) rotate(-90deg)}60%{transform:scale(1.35) rotate(20deg)}100%{transform:scale(1) rotate(0)}}
 @keyframes aparecer{0%{transform:translate(-50%,-50%) scale(.3);opacity:0}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
 @keyframes latido{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.08)}}
@@ -179,6 +180,8 @@ h2{margin:6px 0;font-size:clamp(24px,3.6vw,38px);color:var(--nogal)}
 <div id="aviso" class="oculto"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- Respaldo sin internet: si cdnjs no responde, se usa three.min.js (r128) guardado junto a este archivo -->
+<script>if (!window.THREE) document.write('<script src="three.min.js"><\/script>');</script>
 <script>
 'use strict';
 /* =====================================================================
@@ -541,7 +544,7 @@ function pintarIcono(ctx, id, x, y, tam) {
    ===================================================================== */
 if (typeof THREE === 'undefined') {
   const av = document.getElementById('aviso');
-  av.textContent = 'No se pudo cargar Three.js. Conecta la computadora a internet y vuelve a abrir el juego.';
+  av.textContent = 'No se pudo cargar Three.js. Conecta la computadora a internet y vuelve a abrir el juego (o guarda three.min.js r128 en la misma carpeta que index.html).';
   av.classList.remove('oculto');
   throw new Error('Three.js no está disponible');
 }
@@ -963,9 +966,14 @@ const AUD = {
   puede(costo, limite) { return !!this.ctx && !this.mute && this.activos + costo <= Math.min(limite, CONFIG.AUDIO.maxNodos); },
   nota(f, dur, o) {
     o = o || {};
+    if (o.cuando > 0.02) {               // se agenda para después: los nodos se crean recién al sonar
+      const diferida = Object.assign({}, o, { cuando: 0 });
+      setTimeout(() => this.nota(f, dur, diferida), o.cuando * 1000);
+      return;
+    }
     if (!this.puede(2, o.limite || CONFIG.AUDIO.maxNodos)) return;
     try {
-      const t0 = this.ctx.currentTime + (o.cuando || 0);
+      const t0 = this.ctx.currentTime;
       const osc = this.ctx.createOscillator(), g = this.ctx.createGain();
       if (o.onda) osc.setPeriodicWave(o.onda); else osc.type = o.tipo || 'sine';
       osc.frequency.setValueAtTime(f, t0);
@@ -999,17 +1007,15 @@ const AUD = {
     if (this.paso % 4 === 0) this.nota((this.paso / 4) % 2 ? 1900 : 1500, 0.03, { tipo: 'triangle', vol: 0.022, limite: 6 });
     if (G.musica && this.paso % 3 === 0) {
       const m = this.melodia[(this.paso / 3) % this.melodia.length];
-      if (m) this.nota(this.hz(m), 0.9, { tipo: 'sine', vol: 0.045, limite: 4 });
+      if (m) this.nota(this.hz(m), 0.36, { tipo: 'sine', vol: 0.05, limite: 5 });
     }
   },
   tic() { this.nota(2700, 0.05, { tipo: 'triangle', vol: 0.14 }); },
   toc() { this.golpe(0.09, 0.55, 750); this.nota(330, 0.16, { tipo: 'sine', vol: 0.25, desliz: 210 }); },
-  acierto() { const f = [1046.5, 1318.5, 1568]; for (let i = 0; i < 3; i++) this.nota(f[i], 0.7, { tipo: 'sine', vol: 0.12, cuando: i * 0.09 }); },
+  acierto() { const f = [1046.5, 1318.5, 1568]; for (let i = 0; i < 3; i++) this.nota(f[i], 0.5, { tipo: 'sine', vol: 0.12, cuando: i * 0.09 }); },
   suave() { this.nota(392, 0.24, { tipo: 'triangle', vol: 0.1, desliz: 330 }); },   // aviso amable de error, sin castigo
-  campanada(grave) {
-    const f = grave ? 98 : 196;
-    this.nota(f, grave ? 3.6 : 2.2, { onda: this.ondaCampana, vol: grave ? 0.42 : 0.3, ataque: 0.004 });
-    this.nota(f * 2.01, grave ? 2.4 : 1.4, { onda: this.ondaCampana, vol: 0.12, ataque: 0.004 });
+  campanada(grave) {        // un solo oscilador con onda de campana (armónicos), para no gastar nodos
+    this.nota(grave ? 98 : 196, grave ? 3.0 : 2.0, { onda: this.ondaCampana, vol: grave ? 0.45 : 0.32, ataque: 0.004 });
   },
   fanfarria() {
     const n = [72, 76, 79, 84, 79, 84];
@@ -1758,7 +1764,7 @@ function limpiarEstacion() {
   for (let i = 0; i < EST.texturas.length; i++) EST.texturas[i].dispose();
   EST.piezas = []; EST.ranuras = []; EST.relojes = []; EST.objetos = []; EST.materiales = []; EST.texturas = [];
   EST.interactivo = false; EST.onEncaje = null; EST.onError = null; EST.onListo = null; EST.brillo = null; EST.bonusPieza = null;
-  EST.pistaRanura = null; EST.relojListo = null; EST.listoOcupado = false; EST.item = null; EST.cartel = null; EST.alActualizar = null;
+  EST.pistaRanura = null; EST.relojListo = null; EST.listoOcupado = false; EST.item = null; EST.cartel = null; EST.alActualizar = null; EST.onManoMovida = null;
   apagarBrilloManos();
   soltarTodo();
   PISTAS.desarmar();
@@ -1924,6 +1930,12 @@ function salirMesa() {
 function irAMesaDirecto() { if (G.estacionActiva >= 0 && CAM.modo === 'libre') entrarMesa(MESAS[G.estacionActiva]); }
 function reencuadrar() {
   if (CAM.modo === 'mesa' && CAM.mesa) { poseMesa(CAM.mesa, _v3, _q2); R.camera.position.copy(_v3); R.camera.quaternion.copy(_q2); }
+  else if (CAM.modo === 'trans' && CAM.modoDestino === 'mesa' && CAM.mesa) poseMesa(CAM.mesa, CAM.p1, CAM.q1);
+}
+// Salir de la mesa de forma segura aunque haya una transición en curso
+async function salirDeLaMesa(A) {
+  await A.hasta(() => CAM.modo !== 'trans');
+  if (CAM.modo === 'mesa') { salirMesa(); await A.hasta(() => CAM.modo !== 'trans'); }
 }
 // Caminar con W A S D, mirar con flechas (inclinación ±35°), colisiones simples con deslizamiento
 function actualizarJugador(dt) {
@@ -1970,7 +1982,7 @@ function revisarCercania(dt) {
     if (i === G.estacionActiva && G.estacionLista) {
       if (CAM.bloqueoAuto) { if (d > CONFIG.CAM.salir) CAM.bloqueoAuto = false; }
       else if (d < CONFIG.CAM.entrar) { entrarMesa(m); return; }
-    } else if (d < 2.2 && JUG.avisoT <= 0 && G.estacionActiva >= 0) {
+    } else if (i > G.estacionActiva && d < 2.2 && JUG.avisoT <= 0 && G.estacionActiva >= 0) {
       JUG.avisoT = 9; decir(L.esaMesa);
     }
   }
@@ -2228,11 +2240,12 @@ function alTecla(ev, abajo) {
   if (enCampo) { if (abajo && ev.code === 'Enter') UI.jugar(); return; }
   const code = ev.code;
   if (abajo && !ev.repeat) {
-    if (code === 'Escape') { if (DRAG.estado === 'DRAGGING' || DRAG.sel) soltarTodo(); else alternarPausa(); ev.preventDefault(); return; }
+    const panelTest = UI.el.autotest && !UI.el.autotest.classList.contains('oculto');
+    if (code === 'Escape') { if (panelTest) UI.el.autotest.classList.add('oculto'); else if (DRAG.estado === 'DRAGGING' || DRAG.sel) soltarTodo(); else alternarPausa(); ev.preventDefault(); return; }
     if (code === 'KeyP') { soltarTodo(); alternarPausa(); return; }
     if (code === 'KeyM') { alternarSonido(); return; }
     if (code === 'KeyG') { DEBUG.alternar(); return; }
-    if (code === 'KeyT') { DEBUG.autotest(); return; }
+    if (code === 'KeyT') { if (panelTest) UI.el.autotest.classList.add('oculto'); else DEBUG.autotest(); return; }
     if (code === 'KeyN' && ev.shiftKey) { saltarEstacion(); return; }
     if (code === 'Enter' && G.estado === 'MENU') { UI.jugar(); return; }
   }
@@ -2250,6 +2263,19 @@ function instalarEntradas() {
   window.addEventListener('keydown', e => alTecla(e, true));
   window.addEventListener('keyup', e => alTecla(e, false));
   window.addEventListener('resize', alRedimensionar);
+  // Si se pierde el contexto WebGL (equipos modestos), avisar en vez de quedar en negro
+  cv.addEventListener('webglcontextlost', e => {
+    e.preventDefault();
+    const av = document.getElementById('aviso');
+    av.textContent = 'La computadora reinició los gráficos. Recarga la página (tecla F5) para seguir jugando.';
+    av.classList.remove('oculto');
+  });
+  // Al cambiar de pestaña: pausa automática; al volver, se reanuda el audio
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (G.estado !== 'MENU' && G.estado !== 'RESULTADO' && G.estado !== 'PAUSA') alternarPausa();
+    } else if (AUD.ctx && AUD.ctx.state === 'suspended') { try { AUD.ctx.resume(); } catch (er) { } }
+  });
 }
 function alRedimensionar() {
   R.renderer.setSize(window.innerWidth, window.innerHeight, false);
@@ -2377,7 +2403,7 @@ const PISTAS = {
   progreso() { this.t = 0; this.nivel = 0; this.limpiarVisual(); },
   limpiarVisual() { EST.brillo = null; EST.bonusPieza = null; EST.pistaRanura = null; PART.sinCamino(); for (let i = 0; i < EST.relojes.length; i++) if (!DRAG.sel || DRAG.sel.obj.reloj !== EST.relojes[i]) EST.relojes[i].brillo = null; },
   update(dt) {
-    if (!this.activo || !this.conf || this.ocupado || CAM.modo !== 'mesa' || !EST.interactivo || G.ayudando) return;
+    if (!this.activo || !this.conf || this.ocupado || CAM.modo !== 'mesa' || !EST.interactivo || G.ayudando || EST.listoOcupado) return;
     if (DRAG.estado === 'DRAGGING' || DRAG.estado === 'SNAPPING' || DRAG.estado === 'RETURNING') return;
     this.t += dt;
     const P = CONFIG.PISTAS;
@@ -2566,8 +2592,12 @@ async function pedidoPoner(A, reloj, h, modo, concepto, opciones) {
     clave: () => claveReloj(reloj, h, modo),
     hacer: async () => { await cucuMueve(reloj, h, modo); resuelto = true; }
   });
+  EST.onManoMovida = m => {
+    const obj = m.tipo === 'min' ? anguloMin(modo) : anguloHora(h, modo);
+    if (Math.abs(difAng(m.obj, obj)) < 1) PISTAS.progreso();
+  };
   EST.onListo = async () => {
-    if (resuelto || EST.listoOcupado || G.ayudando) return;
+    if (resuelto || EST.listoOcupado || G.ayudando || PISTAS.ocupado) return;
     const v = validarReloj(reloj, h, modo);
     if (v.ok) { resuelto = true; return; }
     EST.listoOcupado = true;
@@ -2588,7 +2618,7 @@ async function pedidoPoner(A, reloj, h, modo, concepto, opciones) {
   };
   await A.hasta(() => resuelto && !G.ayudando && !EST.listoOcupado);
   // ENTENDER y NOMBRAR
-  EST.interactivo = false; reloj.interactivo = false; EST.onListo = null; EST.relojListo = null;
+  EST.interactivo = false; reloj.interactivo = false; EST.onListo = null; EST.onManoMovida = null; EST.relojListo = null;
   UI.listo(null); PISTAS.desarmar(); ocultarAros(reloj); soltarTodo();
   ponerHora(reloj, h, media, false);
   PART.estallido(reloj.wx, reloj.mesa.y + 0.15, reloj.wz, 16, 1);
@@ -3141,8 +3171,7 @@ async function correrEstacion(i) {
   if (i < 6) {
     await B.esperar(0.5);
     G.estacionLista = false;
-    if (CAM.modo === 'mesa') salirMesa();
-    await B.hasta(() => CAM.modo !== 'trans');
+    await salirDeLaMesa(B);
     limpiarEstacion();
   }
   G.ctxEst = null;
@@ -3191,8 +3220,7 @@ async function finalTorre() {
   EST.interactivo = false;
   await A.hasta(() => !G.ayudando && G.estado !== 'PAUSA');
   G.estacionLista = false;
-  if (CAM.modo === 'mesa') salirMesa();
-  await A.hasta(() => CAM.modo !== 'trans');
+  await salirDeLaMesa(A);
   limpiarEstacion();
   G.controles = false; G.estacionActiva = -1;
   UI.progresoFinal(-1); UI.objetivo(['campanaMayor', '¡La Torre despierta!']);
@@ -3705,7 +3733,7 @@ function iniciar() {
   instalarEntradas();
   alRedimensionar();
   window.__juego = { G: G, EST: EST, DRAG: DRAG, CAM: CAM, CUCU: CUCU, MESAS: MESAS, JUG: JUG, R: R, UI: UI, DEBUG: DEBUG, PISTAS: PISTAS,
-    nearestMark: nearestMark, findCandidate: findCandidate, mesaAMundo: mesaAMundo, posPerilla: posPerilla, RELOJ: RELOJ, AUD: AUD };
+    PART: PART, nearestMark: nearestMark, findCandidate: findCandidate, mesaAMundo: mesaAMundo, posPerilla: posPerilla, RELOJ: RELOJ, AUD: AUD };
   requestAnimationFrame(bucle);
 }
 iniciar();
